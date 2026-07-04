@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clipster 自建分组功能产品方案</title>
+  <style>
+    :root {
+      --bg: #0d0d0f;
+      --surface: #16171a;
+      --surface-2: #1e1f23;
+      --border: #2a2b30;
+      --text: #f0f0f5;
+      --text-secondary: #a0a0b0;
+      --accent: #5b8cff;
+      --accent-dim: #3a5a9a;
+      --success: #4cd97b;
+      --warning: #f5c542;
+      --danger: #ff5f5f;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+    }
+    header {
+      padding: 64px 24px 40px;
+      text-align: center;
+      background: linear-gradient(180deg, rgba(91,140,255,0.12) 0%, transparent 100%);
+      border-bottom: 1px solid var(--border);
+    }
+    header h1 { margin: 0; font-size: 34px; letter-spacing: -0.5px; }
+    header p { margin: 12px 0 0; color: var(--text-secondary); font-size: 16px; }
+    main { max-width: 880px; margin: 0 auto; padding: 40px 24px 80px; }
+    h2 { font-size: 24px; margin: 48px 0 18px; color: var(--accent); }
+    h3 { font-size: 18px; margin: 30px 0 12px; color: #d0d5e3; }
+    p, li { color: var(--text-secondary); }
+    ul, ol { padding-left: 22px; }
+    li { margin: 8px 0; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      margin: 20px 0;
+    }
+    .card h3 { margin-top: 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 14px;
+    }
+    th, td {
+      text-align: left;
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    th { color: var(--text); background: var(--surface-2); }
+    code {
+      font-family: "SF Mono", Menlo, Monaco, Consolas, monospace;
+      background: var(--surface-2);
+      padding: 2px 6px;
+      border-radius: 5px;
+      color: var(--accent);
+      font-size: 0.92em;
+    }
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      background: var(--accent-dim);
+      color: #fff;
+      margin-right: 6px;
+    }
+    .mockup {
+      background: var(--surface-2);
+      border-radius: 12px;
+      padding: 18px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      border: 1px dashed var(--border);
+    }
+    .mockup-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .mockup-row:last-child { border-bottom: none; }
+    .mockup-label { color: var(--text); font-weight: 500; }
+    .group-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Clipster 自建分组功能产品方案</h1>
+    <p>让用户按需创建自定义分组，跨分类组织常用剪贴内容</p>
+  </header>
+
+  <main>
+    <h2>1. 背景与目标</h2>
+    <p>当前 Clipster 的侧栏只有「分类」（文本 / 链接 / 图片 / 代码）和「收藏」两个维度。分类是按内容类型自动归类的，收藏是按「是否标星」归类的，二者都无法满足按<strong>项目、场景或主题</strong>组织剪贴内容的需求。</p>
+    <p><strong>目标</strong>：引入「自建分组」能力，允许用户创建任意分组（如「工作日报素材」「面试题」「租房信息」），把条目自由归入一个或多个分组，并在侧栏快速切换查看。</p>
+
+    <h2>2. 功能概述</h2>
+    <ul>
+      <li>用户可以创建、重命名、改色、删除自定义分组。</li>
+      <li>用户<strong>自由选择</strong>任意条目加入任意分组；一个条目可以同时属于多个分组。</li>
+      <li>分组不会自动归类，是用户按项目 / 场景手动组织的「横向项目维度」，与自动分类相互独立。</li>
+      <li>侧栏新增「我的分组」栏目，展示所有自建分组及其条目数。</li>
+      <li>支持右键 / 快捷键 <code>⌘G</code> 将选中条目加入分组。</li>
+      <li>分组数据跟随 iCloud / 本地数据库同步（先本地，后续可扩展）。</li>
+    </ul>
+
+    <h2>3. 用户场景</h2>
+    <div class="card">
+      <h3>场景 A：项目素材收集</h3>
+      <p>设计师在做一个「品牌升级」项目，会把参考文案、配色链接、竞品截图、代码片段陆续复制到剪贴板。通过自建「品牌升级」分组，可以把跨分类的条目统一收纳，避免在全部列表里翻找。</p>
+    </div>
+    <div class="card">
+      <h3>场景 B：临时工作区</h3>
+      <p>用户在处理一次线上故障，需要把错误日志、相关命令、沟通截图归到一起。创建一个「故障 2026-07-04」分组，处理完后再整组删除。</p>
+    </div>
+    <div class="card">
+      <h3>场景 C：知识库沉淀</h3>
+      <p>开发者把常用的 Shell 命令、正则表达式、SQL 片段分别归入「常用命令」「正则」「SQL」分组，形成个人代码片段库。</p>
+    </div>
+
+    <h2>4. 交互设计</h2>
+
+    <h3>4.1 侧栏结构</h3>
+    <div class="mockup">
+      <div class="mockup-row"><span class="mockup-label">⌘ 全部</span><span>31</span></div>
+      <div style="padding: 6px 0; color: var(--text-secondary); font-size: 12px;">分类</div>
+      <div class="mockup-row"><span>📝 文本</span><span>15</span></div>
+      <div class="mockup-row"><span>🔗 链接</span><span>2</span></div>
+      <div class="mockup-row"><span>🖼 图片</span><span>12</span></div>
+      <div class="mockup-row"><span>⌥ 代码</span><span>0</span></div>
+      <div style="padding: 6px 0; color: var(--text-secondary); font-size: 12px; display: flex; justify-content: space-between;"><span>我的分组</span><span style="cursor: pointer; color: var(--accent);">+ 新建</span></div>
+      <div class="mockup-row"><div class="group-dot" style="background: #5b8cff;"></div><span class="mockup-label">品牌升级</span><span>5</span></div>
+      <div class="mockup-row"><div class="group-dot" style="background: #f5c542;"></div><span class="mockup-label">常用命令</span><span>8</span></div>
+      <div class="mockup-row"><div class="group-dot" style="background: #4cd97b;"></div><span class="mockup-label">租房</span><span>3</span></div>
+      <div style="padding: 6px 0; color: var(--text-secondary); font-size: 12px;">收藏</div>
+      <div class="mockup-row"><span>⭐ 常用</span><span>0</span></div>
+      <div class="mockup-row"><span>🔒 私密</span><span>0</span></div>
+    </div>
+
+    <h3>4.2 创建分组</h3>
+    <ol>
+      <li>点击「我的分组」右侧的 <code>+ 新建</code>。</li>
+      <li>弹出小浮层：输入分组名称、选择颜色（8 种预设）、选择图标（可选 Emoji 或纯色圆点）。</li>
+      <li>点击「创建」，分组立即出现在侧栏，条目数为 0。</li>
+    </ol>
+
+    <h3>4.3 把条目加入分组</h3>
+    <ul>
+      <li><strong>右键菜单</strong>：在条目上右键 → 「加入分组」→ 弹出分组列表，用户可自由勾选 1 个或多个分组。</li>
+      <li><strong>快捷键</strong>：选中条目后按 <code>⌘G</code>，弹出分组选择浮层，自由选择分组。</li>
+      <li><strong>拖拽</strong>：长按条目拖到侧栏某个分组上松开，即可归入该分组（可选交互，v1 可不做）。</li>
+    </ul>
+
+    <h3>4.4 从分组移除</h3>
+    <ul>
+      <li>在分组视图下，右键条目 → 「从本分组移除」，不会删除剪贴板条目本身。</li>
+      <li>删除分组时，提示「分组内的条目将保留在全部列表中」。</li>
+    </ul>
+
+    <h3>4.5 分组管理</h3>
+    <ul>
+      <li>右键侧栏分组 → 「重命名 / 改颜色 / 删除」。</li>
+      <li>分组删除仅删除分组关系，不删除底层条目。</li>
+      <li>支持拖拽排序（v2）。</li>
+    </ul>
+
+    <h2>5. 数据结构设计</h2>
+    <h3>5.1 新增表</h3>
+    <table>
+      <tr><th>表名</th><th>字段</th><th>说明</th></tr>
+      <tr>
+        <td><code>groups</code></td>
+        <td>
+          <code>id</code> INTEGER PRIMARY KEY<br>
+          <code>name</code> TEXT NOT NULL<br>
+          <code>color</code> TEXT （十六进制色值）<br>
+          <code>icon</code> TEXT （Emoji 或 SF Symbol 名）<br>
+          <code>sort_order</code> INTEGER<br>
+          <code>created_at</code> INTEGER<br>
+          <code>updated_at</code> INTEGER
+        </td>
+        <td>自建分组元数据</td>
+      </tr>
+      <tr>
+        <td><code>item_groups</code></td>
+        <td>
+          <code>item_id</code> INTEGER<br>
+          <code>group_id</code> INTEGER<br>
+          PRIMARY KEY (item_id, group_id)
+        </td>
+        <td>条目与分组的多对多关系</td>
+      </tr>
+    </table>
+
+    <h3>5.2 与现有表的关联</h3>
+    <p>现有 <code>items</code> 表无需改动。<code>item_groups</code> 通过 <code>item_id</code> 外键关联。查询某分组下条目时：</p>
+    <pre style="background: var(--surface-2); padding: 14px; border-radius: 8px; overflow-x: auto;"><code>SELECT i.* FROM items i
+JOIN item_groups ig ON i.id = ig.item_id
+WHERE ig.group_id = ?
+ORDER BY i.created_at DESC;</code></pre>
+
+    <h2>6. 与现有功能的关系</h2>
+    <table>
+      <tr><th>维度</th><th>自动/手动</th><th>互斥/共存</th><th>示例</th></tr>
+      <tr><td>分类</td><td>自动（按内容类型）</td><td>与分组共存</td><td>一条文本可以同时属于「文本」分类和「品牌升级」分组</td></tr>
+      <tr><td>收藏</td><td>手动（星标）</td><td>与分组共存</td><td>常用命令可以既标星又归入「常用命令」分组</td></tr>
+      <tr><td>分组</td><td>手动（项目/场景）</td><td>一个条目可在多个分组</td><td>同一段文案可在「品牌升级」和「灵感」两个分组</td></tr>
+    </table>
+
+    <h2>7. 边界与异常处理</h2>
+    <ul>
+      <li><strong>同名分组</strong>：不允许创建同名分组，提示「分组名称已存在」。</li>
+      <li><strong>空分组</strong>：允许保留空分组，侧栏条目数显示 0。</li>
+      <li><strong>删除条目</strong>：删除剪贴板条目时，自动清理 <code>item_groups</code> 中的关联记录。</li>
+      <li><strong>删除分组</strong>：仅删除 <code>groups</code> 和 <code>item_groups</code> 关联，不删条目。</li>
+      <li><strong>搜索</strong>：在分组视图下搜索，只搜该分组内的条目；切回「全部」则恢复全局搜索。</li>
+    </ul>
+
+    <h2>8. 实现优先级建议</h2>
+    <ul>
+      <li><span class="tag">P0</span> 分组增删改查 + 侧栏展示</li>
+      <li><span class="tag">P0</span> 右键「加入分组」+ 多选</li>
+      <li><span class="tag">P1</span> 快捷键 <code>⌘G</code> 快速加入</li>
+      <li><span class="tag">P1</span> 分组视图下搜索过滤</li>
+      <li><span class="tag">P2</span> 拖拽入分组</li>
+      <li><span class="tag">P2</span> 分组排序 / iCloud 同步</li>
+    </ul>
+
+    <h2>9. 收益总结</h2>
+    <ul>
+      <li>从「时间线工具」升级为「剪贴板知识库」。</li>
+      <li>解决长期使用后列表冗长、难以定位的问题。</li>
+      <li>与现有的分类、收藏形成互补，不破坏现有逻辑。</li>
+      <li>为后续「智能推荐」「工作区切换」等功能打下基础。</li>
+    </ul>
+  </main>
+</body>
+</html>

@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+  "name": "Clipster 粘贴板",
+  "version": "1.0",
+  "description": "在网页右键菜单中快速粘贴 Clipster 剪贴板历史",
+  "permissions": [
+    "contextMenus",
+    "activeTab",
+    "scripting",
+    "nativeMessaging",
+    "storage"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_end",
+      "all_frames": true
+    }
+  ],
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}

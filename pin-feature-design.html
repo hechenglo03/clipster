@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clipster · 固定列表功能方案</title>
+<style>
+  :root {
+    --bg: #0a0a0c;
+    --surface: #16161a;
+    --surface-2: #1e1e24;
+    --surface-3: #26262e;
+    --border: rgba(255,255,255,0.08);
+    --border-strong: rgba(255,255,255,0.14);
+    --text: #f5f5f7;
+    --text-dim: #a0a0aa;
+    --text-faint: #6a6a72;
+    --accent: #5e9eff;
+    --accent-2: #b784ff;
+    --green: #34c759;
+    --orange: #ff9f0a;
+    --pink: #ff375f;
+    --teal: #5fd4d2;
+    --radius: 14px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 28px; }
+  header.hero { padding: 90px 0 60px; text-align: center; background: radial-gradient(700px 350px at 50% -10%, rgba(255,159,10,0.16), transparent 70%); }
+  .hero h1 { font-size: 58px; font-weight: 800; letter-spacing: -2px; background: linear-gradient(135deg, #fff 30%, #e0b06b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero p { color: var(--text-dim); font-size: 18px; margin-top: 12px; }
+  section { padding: 54px 0; }
+  section h2 { font-size: 34px; font-weight: 700; letter-spacing: -1px; margin-bottom: 10px; }
+  section .sub { color: var(--text-dim); font-size: 15px; margin-bottom: 36px; }
+  .sec-head { text-align: center; }
+
+  .grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 18px; }
+  .grid-2 { display: grid; grid-template-columns: repeat(2,1fr); gap: 18px; }
+  .card {
+    background: linear-gradient(180deg, var(--surface), var(--surface-2));
+    border: 1px solid var(--border); border-radius: var(--radius); padding: 24px;
+  }
+  .card h3 { font-size: 16px; margin-bottom: 10px; }
+  .card p { font-size: 14px; color: var(--text-dim); }
+  .card .icon { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; font-size: 20px; margin-bottom: 14px; }
+  .i-orange { background: rgba(255,159,10,0.15); color: var(--orange); }
+  .i-blue { background: rgba(94,158,255,0.15); color: var(--accent); }
+  .i-green { background: rgba(52,199,89,0.15); color: var(--green); }
+  .i-purple { background: rgba(183,132,255,0.15); color: var(--accent-2); }
+  .i-pink { background: rgba(255,55,95,0.15); color: var(--pink); }
+  .i-teal { background: rgba(95,212,210,0.15); color: var(--teal); }
+
+  .flow { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
+  .step { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px; position: relative; }
+  .step .num { position: absolute; top: -10px; left: 18px; width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg, var(--orange), var(--pink)); display: grid; place-items: center; font-size: 13px; font-weight: 700; }
+  .step h4 { font-size: 14px; margin: 10px 0 8px; }
+  .step p { font-size: 13px; color: var(--text-dim); }
+
+  .kbd-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-top: 1px solid var(--border); }
+  .kbd-row:first-of-type { border-top: none; }
+  .kbd-row .desc { color: var(--text-dim); font-size: 14px; }
+  .keys { display: flex; gap: 5px; }
+  kbd { font-family: -apple-system, sans-serif; font-size: 12px; padding: 3px 9px; background: var(--surface-3); border: 1px solid var(--border-strong); border-bottom-width: 2px; border-radius: 6px; color: var(--text); }
+
+  .mockup { background: var(--surface); border: 1px solid var(--border-strong); border-radius: 14px; padding: 22px; font-size: 13px; }
+  .pin-item { display: grid; grid-template-columns: 28px 1fr auto; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 6px; }
+  .pin-item:hover { background: var(--surface-2); }
+  .pin-tag { width: 26px; height: 26px; border-radius: 6px; display: grid; place-items: center; font-size: 14px; background: rgba(255,159,10,0.15); }
+  .pin-title { color: var(--text); }
+  .pin-sub { font-size: 11px; color: var(--text-faint); }
+  .pin-kbd { font-size: 11px; color: var(--text-faint); }
+
+  footer { padding: 40px 0 50px; text-align: center; color: var(--text-faint); font-size: 13px; border-top: 1px solid var(--border); margin-top: 20px; }
+  .pill { display: inline-block; font-size: 12px; padding: 4px 11px; border-radius: 100px; background: var(--surface-3); border: 1px solid var(--border); color: var(--text-dim); margin: 3px; }
+
+  @media (max-width: 760px) {
+    .grid-3, .grid-2, .flow { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 38px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>固定列表 · Pin Board</h1>
+    <p>把最常用的内容钉在指尖，一键直达，永不沉入历史</p>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>功能定位</h2>
+      <p class="sub">“收藏”是按分类聚合，“固定”是按使用频率置顶。固定内容不参与自动清理，永远排在最前面。</p>
+    </div>
+    <div class="grid-3">
+      <div class="card">
+        <div class="icon i-orange">📌</div>
+        <h3>一键固定 / 取消</h3>
+        <p>选中条目后按 P 或右键「固定到顶部」，立即置顶；再次按 P 取消固定，回到正常时间序。</p>
+      </div>
+      <div class="card">
+        <div class="icon i-blue">⌨️</div>
+        <h3>数字键优先</h3>
+        <p>固定条目在列表中始终占据 1-9 号数字键。未固定条目从 10 开始编号，高频内容盲打即粘贴。</p>
+      </div>
+      <div class="card">
+        <div class="icon i-green">🛡</div>
+        <h3>不被清理</h3>
+        <p>固定条目默认不参与 30 天自动清理，也不计入保留 1000 条的限制，重要信息长期保存。</p>
+      </div>
+      <div class="card">
+        <div class="icon i-purple">⬚</div>
+        <h3>独立 Pin 面板</h3>
+        <p>侧边栏新增「固定」分类，只显示固定条目；也可在主列表顶部把 Pin 区展开 / 折叠。</p>
+      </div>
+      <div class="card">
+        <div class="icon i-pink">☁</div>
+        <h3>拖拽排序</h3>
+        <p>在固定面板内拖拽调整顺序，自定义你最顺手的快捷键位置。</p>
+      </div>
+      <div class="card">
+        <div class="icon i-teal">⛁</div>
+        <h3>持久化</h3>
+        <p>固定状态写入 SQLite，按 pinned_at 排序，重启应用顺序不变。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>交互设计</h2>
+      <p class="sub">两种视图模式 + 统一快捷键</p>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <h3>模式 A：主列表内嵌 Pin 区</h3>
+        <p style="margin-bottom:14px;">在主列表顶部用分隔线划出「固定」区域，当前分类下若有固定条目，默认展开显示。适合轻度用户。</p>
+        <div class="mockup">
+          <div style="color:var(--text-faint); font-size:11px; padding:4px 8px;">📌 固定 (3)</div>
+          <div class="pin-item"><div class="pin-tag">📝</div><div><div class="pin-title">公司邮箱签名</div><div class="pin-sub">文本 · 固定 2 天</div></div><div class="pin-kbd">1</div></div>
+          <div class="pin-item"><div class="pin-tag">🔗</div><div><div class="pin-title">https://jira.company.com</div><div class="pin-sub">链接 · 固定 1 周</div></div><div class="pin-kbd">2</div></div>
+          <div style="height:1px; background:var(--border); margin:10px 0;"></div>
+          <div style="color:var(--text-faint); font-size:11px; padding:4px 8px;">最近</div>
+          <div class="pin-item"><div class="pin-tag">⌥</div><div><div class="pin-title">func hello() { ... }</div><div class="pin-sub">代码 · 5 分钟前</div></div><div class="pin-kbd">4</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>模式 B：独立 Pin 面板</h3>
+        <p style="margin-bottom:14px;">侧边栏新增「固定」分类，点击进入只显示固定条目。适合需要大量固定内容的重度用户。</p>
+        <div class="mockup">
+          <div style="color:var(--text-faint); font-size:11px; padding:4px 8px;">共 6 条固定内容 · 拖拽排序</div>
+          <div class="pin-item"><div class="pin-tag">📝</div><div><div class="pin-title">常用 SQL 查询模板</div><div class="pin-sub">文本 · ⌘+P 取消固定</div></div><div class="pin-kbd">1</div></div>
+          <div class="pin-item"><div class="pin-tag">🖼</div><div><div class="pin-title">产品 Logo 高清图</div><div class="pin-sub">图片 · 拖拽调整顺序</div></div><div class="pin-kbd">2</div></div>
+          <div class="pin-item"><div class="pin-tag">🔗</div><div><div class="pin-title">API 文档首页</div><div class="pin-sub">链接 · 固定 3 天</div></div><div class="pin-kbd">3</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>快捷键</h2>
+      <p class="sub">固定相关操作全键盘化</p>
+    </div>
+    <div class="card" style="max-width:520px; margin:0 auto;">
+      <div class="kbd-row"><span class="desc">固定 / 取消固定当前选中条目</span><div class="keys"><kbd>P</kbd></div></div>
+      <div class="kbd-row"><span class="desc">快速固定当前剪贴板内容</span><div class="keys"><kbd>⌃</kbd><kbd>P</kbd></div></div>
+      <div class="kbd-row"><span class="desc">跳到第一条固定条目</span><div class="keys"><kbd>⌘</kbd><kbd>⌥</kbd><kbd>1</kbd></div></div>
+      <div class="kbd-row"><span class="desc">打开固定面板</span><div class="keys"><kbd>⌘</kbd><kbd>9</kbd></div></div>
+      <div class="kbd-row"><span class="desc">展开 / 折叠主列表 Pin 区</span><div class="keys"><kbd>⌘</kbd><kbd>⇧</kbd><kbd>P</kbd></div></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>数据模型</h2>
+      <p class="sub">最小改动：复用现有 clip_item 表，新增 pinned_order 字段</p>
+    </div>
+    <div class="card" style="padding:0; overflow:hidden;">
+      <pre style="padding:20px; font-family:SF Mono, Menlo, monospace; font-size:12px; line-height:1.7; color:var(--text-dim); background:var(--surface);">ALTER TABLE clip_item ADD COLUMN pinned_order INTEGER DEFAULT NULL;
+ALTER TABLE clip_item ADD COLUMN is_pinned INTEGER DEFAULT 0;
+
+-- 查询固定列表
+SELECT * FROM clip_item
+WHERE is_pinned = 1
+ORDER BY pinned_order ASC, pinned_at DESC;
+
+-- 查询主列表（固定置顶 + 普通时间序）
+SELECT * FROM clip_item
+WHERE category = ?
+ORDER BY is_pinned DESC, pinned_order ASC, created_at DESC;</pre>
+    </div>
+    <div style="margin-top:18px; text-align:center;">
+      <span class="pill">is_pinned 布尔</span>
+      <span class="pill">pinned_order 排序</span>
+      <span class="pill">pinned_at 时间戳</span>
+      <span class="pill">不参与自动清理</span>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>实现流程</h2>
+      <p class="sub">四步把固定列表接入现有架构</p>
+    </div>
+    <div class="flow">
+      <div class="step"><div class="num">1</div><h4>数据层</h4><p>新增 is_pinned / pinned_order 字段，Repository 增加 pin/unpin/reorder 方法。</p></div>
+      <div class="step"><div class="num">2</div><h4>UI 层</h4><p>侧边栏新增「固定」分类；列表顶部增加 Pin 分隔区。</p></div>
+      <div class="step"><div class="num">3</div><h4>快捷键</h4><p>监听 P 键，PanelController 转发到 ItemRepository。</p></div>
+      <div class="step"><div class="num">4</div><h4>清理策略</h4><p>自动清理任务排除 is_pinned = 1 的记录。</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>与现有“收藏”的区别</h2>
+      <p class="sub">避免功能重叠，定位清晰</p>
+    </div>
+    <div class="card" style="padding:0; overflow:hidden;">
+      <table style="width:100%; border-collapse:collapse; font-size:14px;">
+        <thead>
+          <tr style="background:var(--surface-2); color:var(--text-faint); font-size:12px;">
+            <th style="padding:12px 18px; text-align:left;">维度</th>
+            <th style="padding:12px 18px; text-align:left;">收藏（Favorite）</th>
+            <th style="padding:12px 18px; text-align:left;">固定（Pin）</th>
+          </tr>
+        </thead>
+        <tbody style="color:var(--text-dim);">
+          <tr><td style="padding:12px 18px; border-top:1px solid var(--border);">入口</td><td style="padding:12px 18px; border-top:1px solid var(--border);">侧边栏「常用」</td><td style="padding:12px 18px; border-top:1px solid var(--border);">侧边栏「固定」+ 主列表顶部</td></tr>
+          <tr><td style="padding:12px 18px; border-top:1px solid var(--border);">排序</td><td style="padding:12px 18px; border-top:1px solid var(--border);">按收藏时间</td><td style="padding:12px 18px; border-top:1px solid var(--border);">按自定义 pinned_order</td></tr>
+          <tr><td style="padding:12px 18px; border-top:1px solid var(--border);">数字键</td><td style="padding:12px 18px; border-top:1px solid var(--border);">无特殊优先</td><td style="padding:12px 18px; border-top:1px solid var(--border);">固定条目优先占用 1-9</td></tr>
+          <tr><td style="padding:12px 18px; border-top:1px solid var(--border);">清理</td><td style="padding:12px 18px; border-top:1px solid var(--border);">参与自动清理</td><td style="padding:12px 18px; border-top:1px solid var(--border);">不参与自动清理</td></tr>
+          <tr><td style="padding:12px 18px; border-top:1px solid var(--border);">用途</td><td style="padding:12px 18px; border-top:1px solid var(--border);">“以后可能用到”</td><td style="padding:12px 18px; border-top:1px solid var(--border);">“今天高频使用”</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">Clipster · 固定列表功能方案 · 2026</div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clipster 主面板 UI 设计稿</title>
+  <style>
+    :root {
+      --bg: #0a0a0c;
+      --panel-bg: rgba(14, 14, 16, 0.98);
+      --sidebar-bg: rgba(11, 11, 13, 0.98);
+      --surface: rgba(255, 255, 255, 0.04);
+      --surface-hover: rgba(255, 255, 255, 0.08);
+      --surface-selected: rgba(91, 140, 255, 0.14);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-strong: rgba(255, 255, 255, 0.14);
+      --text: #f2f2f7;
+      --text-secondary: #a0a0b0;
+      --text-faint: #6e6e7a;
+      --accent: #5b8cff;
+      --accent-soft: rgba(91, 140, 255, 0.20);
+      --green: #4cd97b;
+      --yellow: #f5c542;
+      --red: #ff5f5f;
+      --radius: 14px;
+      --radius-sm: 10px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+    }
+    header {
+      padding: 64px 24px 40px;
+      text-align: center;
+      background: linear-gradient(180deg, rgba(91,140,255,0.12) 0%, transparent 100%);
+      border-bottom: 1px solid var(--border);
+    }
+    header h1 { margin: 0; font-size: 34px; letter-spacing: -0.5px; }
+    header p { margin: 12px 0 0; color: var(--text-secondary); font-size: 16px; }
+    main { max-width: 960px; margin: 0 auto; padding: 40px 24px 80px; }
+    h2 { font-size: 24px; margin: 48px 0 18px; color: var(--accent); }
+    h3 { font-size: 18px; margin: 30px 0 12px; color: #d0d5e3; }
+    p, li { color: var(--text-secondary); }
+    ul, ol { padding-left: 22px; }
+    li { margin: 8px 0; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin: 20px 0;
+    }
+    .card h3 { margin-top: 0; }
+    code {
+      font-family: "SF Mono", Menlo, Monaco, Consolas, monospace;
+      background: rgba(255,255,255,0.08);
+      padding: 2px 6px;
+      border-radius: 5px;
+      color: var(--accent);
+      font-size: 0.92em;
+    }
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      background: rgba(91,140,255,0.25);
+      color: #fff;
+      margin-right: 6px;
+    }
+
+    /* 主面板模拟图 */
+    .panel-mockup {
+      width: 760px;
+      height: 460px;
+      background: var(--panel-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 24px 60px rgba(0,0,0,0.45);
+      display: flex;
+      overflow: hidden;
+      margin: 24px auto;
+      font-size: 13px;
+    }
+    .sidebar {
+      width: 200px;
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 14px 12px;
+    }
+    .search-box {
+      height: 32px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      color: var(--text-faint);
+      margin-bottom: 12px;
+      font-size: 12px;
+    }
+    .section-label {
+      color: var(--text-faint);
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 8px 0 6px 6px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 32px;
+      padding: 0 10px;
+      border-radius: 8px;
+      color: var(--text-secondary);
+      margin: 1px 0;
+      cursor: default;
+    }
+    .nav-item:hover { background: var(--surface-hover); color: var(--text); }
+    .nav-item.active { background: var(--surface-selected); color: var(--text); }
+    .nav-left { display: flex; align-items: center; gap: 8px; }
+    .nav-count { color: var(--text-faint); font-size: 12px; }
+    .nav-item.active .nav-count { color: var(--accent); }
+    .add-btn { color: var(--accent); cursor: pointer; }
+
+    .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .content-header {
+      height: 42px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px;
+      font-weight: 600;
+    }
+    .content-header span:last-child { color: var(--text-faint); font-size: 12px; font-weight: 400; }
+    .content-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 14px;
+    }
+    .list-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid transparent;
+      margin-bottom: 5px;
+    }
+    .list-item:hover { background: var(--surface-hover); border-color: var(--border); }
+    .list-item.selected { background: var(--surface-selected); border-color: rgba(91,140,255,0.35); }
+    .item-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: rgba(91,140,255,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .item-text { flex: 1; min-width: 0; }
+    .item-title {
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .item-sub {
+      color: var(--text-faint);
+      font-size: 11px;
+      margin-top: 2px;
+    }
+    .item-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text-faint);
+      font-size: 11px;
+      flex-shrink: 0;
+    }
+    .content-footer {
+      height: 28px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      font-size: 11px;
+      color: var(--text-faint);
+    }
+    .shortcut-hint { display: flex; gap: 12px; }
+    .key {
+      background: rgba(255,255,255,0.08);
+      padding: 1px 5px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+
+    /* 九宫格模拟 */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    .grid-item {
+      aspect-ratio: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      position: relative;
+    }
+    .grid-item:hover { background: var(--surface-hover); }
+    .grid-item.selected { border-color: var(--accent); background: var(--surface-selected); }
+    .grid-index {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      background: rgba(0,0,0,0.5);
+      color: #fff;
+      font-size: 10px;
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 14px;
+    }
+    th, td {
+      text-align: left;
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    th { color: var(--text); background: rgba(255,255,255,0.04); }
+    .color-chip {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Clipster 主面板 UI 设计稿</h1>
+    <p>深色毛玻璃风格、侧栏 + 内容区两栏布局、列表与九宫格自适应切换</p>
+  </header>
+
+  <main>
+    <h2>1. 设计目标</h2>
+    <ul>
+      <li><strong>一眼定位</strong>：侧栏提供分类、自建分组、收藏三个入口，内容区按当前维度过滤。</li>
+      <li><strong>高效操作</strong>：回车粘贴、数字键直达、方向键选择、快捷键分类切换。</li>
+      <li><strong>视觉降噪</strong>：深色背景 + 低饱和强调色，减少长期使用疲劳。</li>
+      <li><strong>内容自适应</strong>：文本/链接/代码用列表，图片用九宫格。</li>
+    </ul>
+
+    <h2>2. 整体布局</h2>
+    <div class="panel-mockup">
+      <!-- 侧栏 -->
+      <div class="sidebar">
+        <div class="search-box">🔍 搜索全部内容...</div>
+        <div class="nav-item active">
+          <div class="nav-left"><span>⌘</span><span>全部</span></div>
+          <span class="nav-count">31</span>
+        </div>
+        <div class="section-label">分类</div>
+        <div class="nav-item">
+          <div class="nav-left"><span>📝</span><span>文本</span></div>
+          <span class="nav-count">15</span>
+        </div>
+        <div class="nav-item">
+          <div class="nav-left"><span>🔗</span><span>链接</span></div>
+          <span class="nav-count">2</span>
+        </div>
+        <div class="nav-item">
+          <div class="nav-left"><span>🖼</span><span>图片</span></div>
+          <span class="nav-count">12</span>
+        </div>
+        <div class="nav-item">
+          <div class="nav-left"><span>⌥</span><span>代码</span></div>
+          <span class="nav-count">0</span>
+        </div>
+        <div class="section-label">
+          <span>我的分组</span>
+          <span class="add-btn">+ 新建</span>
+        </div>
+        <div class="nav-item">
+          <div class="nav-left">
+            <span class="color-chip" style="background: #5b8cff;"></span>
+            <span>品牌升级</span>
+          </div>
+          <span class="nav-count">5</span>
+        </div>
+        <div class="nav-item">
+          <div class="nav-left">
+            <span class="color-chip" style="background: #f5c542;"></span>
+            <span>常用命令</span>
+          </div>
+          <span class="nav-count">8</span>
+        </div>
+        <div class="section-label">收藏</div>
+        <div class="nav-item">
+          <div class="nav-left"><span>⭐</span><span>常用</span></div>
+          <span class="nav-count">0</span>
+        </div>
+        <div class="nav-item">
+          <div class="nav-left"><span>🔒</span><span>私密</span></div>
+          <span class="nav-count">0</span>
+        </div>
+      </div>
+
+      <!-- 内容区 -->
+      <div class="content">
+        <div class="content-header">
+          <span>Clipster — 31 条记录</span>
+          <span>文本分类</span>
+        </div>
+        <div class="content-body">
+          <div class="list-item selected">
+            <div class="item-icon">📝</div>
+            <div class="item-text">
+              <div class="item-title">npm install -g @anthropic-ai/claude-code</div>
+              <div class="item-sub">代码 · 安装 Claude Code CLI</div>
+            </div>
+            <div class="item-meta">
+              <span>1</span>
+              <span>2分钟前</span>
+            </div>
+          </div>
+          <div class="list-item">
+            <div class="item-icon" style="background: rgba(76,217,123,0.15);">🔗</div>
+            <div class="item-text">
+              <div class="item-title">https://developer.apple.com/documentation/appkit</div>
+              <div class="item-sub">链接 · Apple Developer</div>
+            </div>
+            <div class="item-meta">
+              <span>2</span>
+              <span>15分钟前</span>
+            </div>
+          </div>
+          <div class="list-item">
+            <div class="item-icon" style="background: rgba(245,197,66,0.15);">📝</div>
+            <div class="item-text">
+              <div class="item-title">会议记录：下周一评审设计稿，参会人 @设计 @产品 @前端</div>
+              <div class="item-sub">文本 · 会议摘要</div>
+            </div>
+            <div class="item-meta">
+              <span>3</span>
+              <span>1小时前</span>
+            </div>
+          </div>
+        </div>
+        <div class="content-footer">
+          <div class="shortcut-hint">
+            <span><span class="key">⌃⌘M</span> 唤出</span>
+            <span><span class="key">⌃K</span> 搜索</span>
+            <span><span class="key">↑↓</span> 选择</span>
+            <span><span class="key">↩</span> 粘贴</span>
+            <span><span class="key">1-9</span> 直达</span>
+          </div>
+          <span>⏻ 监听中</span>
+        </div>
+      </div>
+    </div>
+
+    <h2>3. 视觉规范</h2>
+    <table>
+      <tr><th>元素</th><th>数值</th><th>说明</th></tr>
+      <tr><td>窗口尺寸</td><td>800 × 540 px（默认）</td><td>可缩放，最小 640 × 420</td></tr>
+      <tr><td>侧栏宽度</td><td>200 px</td><td>固定宽度，不参与缩放</td></tr>
+      <tr><td>背景色</td><td><span class="color-chip" style="background: #0e0e10;"></span>#0e0e10</td><td>主面板背景，98% 不透明度</td></tr>
+      <tr><td>侧栏背景</td><td><span class="color-chip" style="background: #0b0b0d;"></span>#0b0b0d</td><td>略深于内容区，形成层次</td></tr>
+      <tr><td>强调色</td><td><span class="color-chip" style="background: #5b8cff;"></span>#5b8cff</td><td>选中态、按钮、链接标签</td></tr>
+      <tr><td>文字主色</td><td><span class="color-chip" style="background: #f2f2f7;"></span>#f2f2f7</td><td>标题、条目主内容</td></tr>
+      <tr><td>文字次色</td><td><span class="color-chip" style="background: #a0a0b0;"></span>#a0a0b0</td><td>副标题、分类提示</td></tr>
+      <tr><td>弱化色</td><td><span class="color-chip" style="background: #6e6e7a;"></span>#6e6e7a</td><td>时间、序号、分区标签</td></tr>
+      <tr><td>圆角</td><td>14px（窗口）/ 10px（条目）/ 8px（按钮）</td><td>统一圆角体系</td></tr>
+      <tr><td>字体</td><td>SF Pro / PingFang SC</td><td>系统字体，保证清晰</td></tr>
+      <tr><td>阴影</td><td>0 24px 60px rgba(0,0,0,0.45)</td><td>浮层感，与桌面区分</td></tr>
+    </table>
+
+    <h2>4. 侧栏设计</h2>
+    <div class="card">
+      <h3>4.1 分区结构</h3>
+      <p>从上到下依次为：</p>
+      <ol>
+        <li><strong>搜索框</strong>：始终置顶，激活后高亮边框。</li>
+        <li><strong>全部</strong>：展示所有未删除条目，默认选中。</li>
+        <li><strong>分类</strong>：文本、链接、图片、代码。</li>
+        <li><strong>我的分组</strong>：用户自建分组，右侧有「+ 新建」入口。</li>
+        <li><strong>收藏</strong>：常用、私密（后续可扩展）。</li>
+      </ol>
+    </div>
+    <div class="card">
+      <h3>4.2 分组样式</h3>
+      <ul>
+        <li>每个分组左侧使用颜色圆点（8px）或 Emoji 图标。</li>
+        <li>右侧显示该分组下的条目数量。</li>
+        <li>hover 时背景变为 <code>rgba(255,255,255,0.08)</code>。</li>
+        <li>选中时背景变为 <code>rgba(91,140,255,0.14)</code>，文字变白，数量变强调色。</li>
+      </ul>
+    </div>
+
+    <h2>5. 内容区设计</h2>
+    <div class="card">
+      <h3>5.1 顶部标题栏</h3>
+      <p>左侧显示「Clipster — N 条记录」，右侧显示当前选中的维度（如「文本分类」「品牌升级」）。高度 42px，底部 1px 分隔线。</p>
+    </div>
+    <div class="card">
+      <h3>5.2 列表视图（文本 / 链接 / 代码）</h3>
+      <ul>
+        <li>每条高度 56px，内边距 10px 12px，圆角 10px。</li>
+        <li>左侧 36px 图标区：分类 Emoji + 分类色背景。</li>
+        <li>中间主内容：一行标题（截断），一行副标题（分类 + 来源/摘要）。</li>
+        <li>右侧元信息：数字序号、相对时间。</li>
+        <li>Hover：背景变浅，边框出现。</li>
+        <li>选中：蓝色背景 + 蓝色边框，序号变蓝。</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>5.3 图片九宫格视图</h3>
+      <p>当选中「图片」分类或某个只包含图片的分组时，自动切换为九宫格：</p>
+      <div class="panel-mockup" style="height: 260px;">
+        <div class="content" style="width: 100%;">
+          <div class="content-header"><span>Clipster — 12 条图片</span><span>图片分类</span></div>
+          <div class="content-body">
+            <div class="grid">
+              <div class="grid-item selected">🖼<span class="grid-index">1</span></div>
+              <div class="grid-item">🖼<span class="grid-index">2</span></div>
+              <div class="grid-item">🖼<span class="grid-index">3</span></div>
+              <div class="grid-item">🖼<span class="grid-index">4</span></div>
+              <div class="grid-item">🖼<span class="grid-index">5</span></div>
+              <div class="grid-item">🖼<span class="grid-index">6</span></div>
+              <div class="grid-item">🖼<span class="grid-index">7</span></div>
+              <div class="grid-item">🖼<span class="grid-index">8</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <ul>
+        <li>每个单元格 140×140px，间距 12px，圆角 10px。</li>
+        <li>图片按比例缩放，居中显示。</li>
+        <li>右上角显示数字序号。</li>
+        <li>选中：蓝色边框 + 蓝色微光背景。</li>
+        <li>点击即粘贴图片到当前应用。</li>
+      </ul>
+    </div>
+
+    <h2>6. 搜索与过滤</h2>
+    <ul>
+      <li>搜索框激活后，内容区实时过滤，高亮匹配关键词。</li>
+      <li>搜索范围：当前维度（全部分类 / 当前分类 / 当前分组）。</li>
+      <li>无结果时展示空状态：大图标 + 「未找到相关内容」。</li>
+      <li>按 <code>Esc</code> 清空搜索并退出搜索框焦点。</li>
+    </ul>
+
+    <h2>7. 空状态</h2>
+    <div class="card">
+      <h3>7.1 无记录</h3>
+      <p>首次使用或清空后，内容区中央显示：</p>
+      <p style="text-align: center; color: var(--text-faint); font-size: 14px;">📋 剪贴板为空<br>复制任意内容后将自动出现在这里</p>
+    </div>
+    <div class="card">
+      <h3>7.2 分类为空</h3>
+      <p>例如「代码」分类下无记录：</p>
+      <p style="text-align: center; color: var(--text-faint); font-size: 14px;">⌥ 暂无代码片段</p>
+    </div>
+
+    <h2>8. 交互细节</h2>
+    <table>
+      <tr><th>操作</th><th>行为</th></tr>
+      <tr><td>鼠标单击条目</td><td>写入剪贴板并自动粘贴，面板关闭</td></tr>
+      <tr><td>按 <code>↩</code></td><td>粘贴当前选中条目</td></tr>
+      <tr><td>按数字键 <code>1-9</code></td><td>直达并粘贴对应序号条目</td></tr>
+      <tr><td>按 <code>↑ / ↓</code></td><td>上下移动选中</td></tr>
+      <tr><td>按 <code>⌘1-4</code></td><td>切换分类（文本/链接/图片/代码）</td></tr>
+      <tr><td>按 <code>⌘G</code></td><td>将选中条目加入分组</td></tr>
+      <tr><td>按 <code>⌘D</code></td><td>收藏 / 取消收藏</td></tr>
+      <tr><td>按 <code>⌫</code></td><td>删除当前选中条目</td></tr>
+      <tr><td>按 <code>Esc</code></td><td>关闭面板 / 清空搜索</td></tr>
+    </table>
+
+    <h2>9. 底部快捷键提示</h2>
+    <p>底部固定 28px 高，左侧展示常用快捷键，右侧展示监听状态。提示颜色使用弱化色，不抢视觉焦点。</p>
+
+    <h2>10. 后续可扩展</h2>
+    <ul>
+      <li>多选批量操作（<code>⌘Click</code> 或 <code>⇧Click</code>）。</li>
+      <li>拖拽排序 / 拖拽入分组。</li>
+      <li>列表与九宫格的视图切换按钮。</li>
+      <li>主题切换（深色 / 浅色 / 跟随系统）。</li>
+      <li>预览浮层（链接卡片、图片放大、代码高亮）。</li>
+    </ul>
+  </main>
+</body>
+</html>

@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clipster · 技术方案</title>
+<style>
+  :root {
+    --bg: #0a0a0c;
+    --surface: #16161a;
+    --surface-2: #1e1e24;
+    --surface-3: #26262e;
+    --border: rgba(255,255,255,0.08);
+    --border-strong: rgba(255,255,255,0.14);
+    --text: #f5f5f7;
+    --text-dim: #a0a0aa;
+    --text-faint: #6a6a72;
+    --accent: #5e9eff;
+    --accent-2: #b784ff;
+    --green: #34c759;
+    --orange: #ff9f0a;
+    --pink: #ff375f;
+    --teal: #5fd4d2;
+    --radius: 14px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.6;
+    -webkit-font-smoothing: antialiased; overflow-x: hidden;
+  }
+  .wrap { max-width: 1140px; margin: 0 auto; padding: 0 28px; }
+  code, .mono { font-family: "SF Mono", "JetBrains Mono", Menlo, monospace; }
+
+  /* HERO */
+  header.hero {
+    padding: 110px 0 70px; text-align: center; position: relative; overflow: hidden;
+    background:
+      radial-gradient(800px 400px at 50% -10%, rgba(95,212,210,0.16), transparent 70%),
+      radial-gradient(600px 300px at 80% 20%, rgba(183,132,255,0.10), transparent 70%);
+  }
+  .hero .badge {
+    display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px; border-radius: 100px;
+    background: var(--surface-2); border: 1px solid var(--border); font-size: 13px; color: var(--text-dim); margin-bottom: 26px;
+  }
+  .hero .badge .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--teal); box-shadow: 0 0 10px var(--teal); }
+  .hero h1 {
+    font-size: 70px; font-weight: 800; letter-spacing: -2px; line-height: 1.05;
+    background: linear-gradient(135deg, #fff 30%, #8fb8d0); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    margin-bottom: 16px;
+  }
+  .hero p { font-size: 20px; color: var(--text-dim); max-width: 600px; margin: 0 auto; }
+  .hero .ver { margin-top: 20px; font-size: 13px; color: var(--text-faint); letter-spacing: 1px; }
+  .hero .stacks { display: flex; gap: 10px; justify-content: center; margin-top: 32px; flex-wrap: wrap; }
+  .stack-chip {
+    padding: 6px 14px; border-radius: 8px; background: var(--surface-2); border: 1px solid var(--border);
+    font-size: 13px; color: var(--text-dim);
+  }
+  .stack-chip b { color: var(--text); font-weight: 600; }
+
+  /* SECTIONS */
+  section { padding: 64px 0; }
+  section h2 { font-size: 36px; font-weight: 700; letter-spacing: -1px; margin-bottom: 8px; }
+  section .sub { color: var(--text-dim); font-size: 16px; margin-bottom: 40px; }
+  .sec-head { text-align: center; }
+
+  /* CARDS */
+  .grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 18px; }
+  .grid-2 { display: grid; grid-template-columns: repeat(2,1fr); gap: 18px; }
+  .card {
+    background: linear-gradient(180deg, var(--surface), var(--surface-2));
+    border: 1px solid var(--border); border-radius: var(--radius); padding: 24px;
+  }
+  .card .icon { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; font-size: 20px; margin-bottom: 14px; }
+  .card h3 { font-size: 17px; margin-bottom: 8px; }
+  .card p { font-size: 14px; color: var(--text-dim); }
+  .i-blue { background: rgba(94,158,255,0.15); color: var(--accent); }
+  .i-purple { background: rgba(183,132,255,0.15); color: var(--accent-2); }
+  .i-green { background: rgba(52,199,89,0.15); color: var(--green); }
+  .i-orange { background: rgba(255,159,10,0.15); color: var(--orange); }
+  .i-pink { background: rgba(255,55,95,0.15); color: var(--pink); }
+  .i-teal { background: rgba(95,212,210,0.15); color: var(--teal); }
+
+  /* TABLE */
+  .tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .tbl th, .tbl td { text-align: left; padding: 13px 16px; border-bottom: 1px solid var(--border); }
+  .tbl th { color: var(--text-faint); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; background: var(--surface-2); }
+  .tbl tr:last-child td { border-bottom: none; }
+  .tbl tr:hover td { background: rgba(255,255,255,0.02); }
+  .tag { display: inline-block; padding: 2px 9px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+  .tag-green { background: rgba(52,199,89,0.15); color: var(--green); }
+  .tag-orange { background: rgba(255,159,10,0.15); color: var(--orange); }
+  .tag-blue { background: rgba(94,158,255,0.15); color: var(--accent); }
+
+  /* ARCH DIAGRAM */
+  .arch {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 30px; display: flex; flex-direction: column; gap: 14px;
+  }
+  .layer {
+    display: grid; gap: 12px; padding: 16px; border-radius: 11px; border: 1px solid var(--border);
+    position: relative;
+  }
+  .layer .lname { font-size: 11px; color: var(--text-faint); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px; }
+  .layer-ui { background: linear-gradient(135deg, rgba(94,158,255,0.08), rgba(183,132,255,0.06)); }
+  .layer-logic { background: linear-gradient(135deg, rgba(95,212,210,0.08), rgba(94,158,255,0.05)); }
+  .layer-data { background: linear-gradient(135deg, rgba(255,159,10,0.08), rgba(255,55,95,0.05)); }
+  .layer-os { background: linear-gradient(135deg, rgba(52,199,89,0.08), rgba(95,212,210,0.05)); }
+  .modules { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; }
+  .mod {
+    background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-radius: 8px;
+    padding: 11px 12px; font-size: 13px; text-align: center;
+  }
+  .mod .mn { font-weight: 600; font-size: 13px; }
+  .mod .md { font-size: 11px; color: var(--text-faint); margin-top: 2px; }
+  .arrow { text-align: center; color: var(--text-faint); font-size: 16px; line-height: 0.5; }
+
+  /* CODE BLOCK */
+  .code {
+    background: #0d0d10; border: 1px solid var(--border); border-radius: 12px;
+    overflow: hidden; margin-top: 10px;
+  }
+  .code .ch {
+    display: flex; align-items: center; gap: 8px; padding: 9px 14px;
+    background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border);
+    font-size: 12px; color: var(--text-faint);
+  }
+  .code .ch .cd { width: 10px; height: 10px; border-radius: 50%; background: #333; }
+  .code pre { padding: 16px 18px; font-size: 13px; line-height: 1.7; overflow-x: auto; color: #e6e6e8; }
+  .code .k { color: #ff79c6; }
+  .code .s { color: #f1fa8c; }
+  .code .c { color: #6a6a72; font-style: italic; }
+  .code .t { color: #8be9fd; }
+  .code .n { color: #bd93f9; }
+  .code .f { color: #50fa7b; }
+
+  /* TIMELINE */
+  .tl { position: relative; padding-left: 30px; }
+  .tl::before { content: ""; position: absolute; left: 9px; top: 8px; bottom: 8px; width: 2px; background: var(--border); }
+  .tl-item { position: relative; padding-bottom: 26px; }
+  .tl-item:last-child { padding-bottom: 0; }
+  .tl-item .pt { position: absolute; left: -30px; top: 4px; width: 20px; height: 20px; border-radius: 50%; background: var(--surface-3); border: 2px solid var(--accent); }
+  .tl-item .ph { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+  .tl-item .ph .ms { font-size: 12px; padding: 2px 10px; border-radius: 6px; background: rgba(94,158,255,0.15); color: var(--accent); font-weight: 600; }
+  .tl-item .ptt { font-size: 16px; font-weight: 600; }
+  .tl-item p { font-size: 14px; color: var(--text-dim); }
+
+  /* TREE */
+  .tree { font-size: 13.5px; line-height: 1.85; color: var(--text-dim); }
+  .tree .d { color: var(--accent); }
+  .tree .f { color: var(--text); }
+  .tree .c { color: var(--text-faint); }
+
+  /* KPI */
+  .kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; }
+  .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px; text-align: center; }
+  .kpi .v { font-size: 30px; font-weight: 800; letter-spacing: -1px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .kpi .l { font-size: 12px; color: var(--text-faint); margin-top: 6px; letter-spacing: 0.5px; }
+
+  footer { padding: 44px 0 56px; text-align: center; color: var(--text-faint); font-size: 13px; border-top: 1px solid var(--border); margin-top: 20px; }
+  .pill-list { display: flex; flex-wrap: wrap; gap: 8px; }
+  .pill { font-size: 12px; padding: 4px 11px; border-radius: 100px; background: var(--surface-3); border: 1px solid var(--border); color: var(--text-dim); }
+
+  @media (max-width: 860px) {
+    .hero h1 { font-size: 46px; }
+    .grid-3, .grid-2, .kpi-grid { grid-template-columns: 1fr 1fr; }
+    .modules { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="wrap">
+    <div class="badge"><span class="dot"></span> Clipster · Technical Design</div>
+    <h1>技术方案</h1>
+    <p>Mac 原生粘贴板管理器 · 系统架构与实现蓝图</p>
+    <div class="stacks">
+      <span class="stack-chip"><b>Swift 5.9</b> + AppKit</span>
+      <span class="stack-chip"><b>SQLite</b> + FTS5</span>
+      <span class="stack-chip"><b>Combine</b> 响应式</span>
+      <span class="stack-chip"><b>CGEvent</b> 全局快捷键</span>
+    </div>
+    <div class="ver">v1.0 · 架构设计稿 · 2026</div>
+  </div>
+</header>
+
+<!-- 技术栈选型 -->
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>技术栈选型</h2>
+      <p class="sub">三套候选方案对比，确定主推路线</p>
+    </div>
+    <div class="card" style="padding: 0; overflow: hidden;">
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>维度</th>
+            <th>Swift + AppKit（原生）</th>
+            <th>Tauri（Rust + Web）</th>
+            <th>Electron（Node + Web）</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>性能 / 内存</td><td><span class="tag tag-green">极佳 · 30MB</span></td><td><span class="tag tag-blue">优秀 · 60MB</span></td><td><span class="tag tag-orange">一般 · 200MB+</span></td></tr>
+          <tr><td>系统集成度</td><td><span class="tag tag-green">最深</span> NSPasteboard / CGEvent 原生</td><td>需 Rust 插件桥接</td><td>需原生 Node 扩展</td></tr>
+          <tr><td>全局快捷键</td><td><span class="tag tag-green">CGEventTap 原生支持</span></td><td>依赖第三方 crate</td><td>依赖第三方模块</td></tr>
+          <tr><td>UI 还原度</td><td><span class="tag tag-green">100% macOS 风格</span></td><td>Web 自绘 · 高</td><td>Web 自绘 · 高</td></tr>
+          <tr><td>开发效率</td><td><span class="tag tag-orange">中等</span></td><td><span class="tag tag-blue">较高</span></td><td><span class="tag tag-green">高</span></td></tr>
+          <tr><td>包体积</td><td><span class="tag tag-green">~8MB</span></td><td><span class="tag tag-blue">~15MB</span></td><td><span class="tag tag-orange">~120MB</span></td></tr>
+          <tr><td>结论</td><td><span class="tag tag-green">✅ 主推</span></td><td>备选</td><td>不推荐</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="margin-top: 18px;" class="pill-list">
+      <span class="pill">语言：Swift 5.9</span>
+      <span class="pill">UI：AppKit + 少量 SwiftUI</span>
+      <span class="pill">存储：SQLite + FTS5 全文索引</span>
+      <span class="pill">响应式：Combine Framework</span>
+      <span class="pill">依赖管理：SPM</span>
+      <span class="pill">最低系统：macOS 13+</span>
+    </div>
+  </div>
+</section>
+
+<!-- 系统架构 -->
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>系统架构</h2>
+      <p class="sub">四层分层架构 · UI / 业务 / 数据 / 系统桥接</p>
+    </div>
+    <div class="arch">
+      <div class="layer layer-ui">
+        <div class="lname">Presentation Layer · 表现层</div>
+        <div class="modules">
+          <div class="mod"><div class="mn">浮层主窗口</div><div class="md">NSPanel + 毛玻璃</div></div>
+          <div class="mod"><div class="mn">菜单栏常驻</div><div class="md">NSStatusItem</div></div>
+          <div class="mod"><div class="mn">设置面板</div><div class="md">NSTabViewController</div></div>
+          <div class="mod"><div class="mn">条目 Cell</div><div class="md">NSCollectionView</div></div>
+        </div>
+      </div>
+      <div class="arrow">↕</div>
+      <div class="layer layer-logic">
+        <div class="lname">Business Layer · 业务层</div>
+        <div class="modules">
+          <div class="mod"><div class="mn">分类引擎</div><div class="md">ContentClassifier</div></div>
+          <div class="mod"><div class="mn">去重服务</div><div class="md">Deduplicator</div></div>
+          <div class="mod"><div class="mn">搜索服务</div><div class="md">SearchService</div></div>
+          <div class="mod"><div class="mn">快捷键管理</div><div class="md">HotkeyManager</div></div>
+        </div>
+      </div>
+      <div class="arrow">↕</div>
+      <div class="layer layer-data">
+        <div class="lname">Data Layer · 数据层</div>
+        <div class="modules">
+          <div class="mod"><div class="mn">DAO</div><div class="md">ItemRepository</div></div>
+          <div class="mod"><div class="mn">SQLite</div><div class="md">GRDB.swift</div></div>
+          <div class="mod"><div class="mn">FTS5 索引</div><div class="md">全文检索</div></div>
+          <div class="mod"><div class="mn">图片存储</div><div class="md">文件系统 + 缓存</div></div>
+        </div>
+      </div>
+      <div class="arrow">↕</div>
+      <div class="layer layer-os">
+        <div class="lname">OS Bridge · 系统桥接层</div>
+        <div class="modules">
+          <div class="mod"><div class="mn">剪贴板监听</div><div class="md">NSPasteboard + Timer</div></div>
+          <div class="mod"><div class="mn">全局快捷键</div><div class="md">CGEventTap</div></div>
+          <div class="mod"><div class="mn">自动粘贴</div><div class="md">CGEvent 模拟按键</div></div>
+          <div class="mod"><div class="mn">沙盒 / 权限</div><div class="md">Entitlements</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 核心模块 -->
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>核心模块设计</h2>
+      <p class="sub">六个关键模块的职责与实现要点</p>
+    </div>
+    <div class="grid-3">
+      <div class="card">
+        <div class="icon i-blue">⧉</div>
+        <h3>ClipboardWatcher</h3>
+        <p>轮询 NSPasteboard.changeCount，0.5s 间隔检测变化。读取文本/URL/图片/文件多类型，发送到处理管线。后台静默运行，无 UI 干扰。</p>
+      </div>
+      <div class="card">
+        <div class="icon i-purple">⬚</div>
+        <h3>ContentClassifier</h3>
+        <p>规则 + 正则识别内容类型：URL、邮箱、颜色值（#hex）、代码块（缩进/关键字）、文件路径。输出 Category 枚举，驱动分类视图。</p>
+      </div>
+      <div class="card">
+        <div class="icon i-green">⚡</div>
+        <h3>SearchService</h3>
+        <p>基于 SQLite FTS5 全文索引，支持模糊匹配、按分类过滤、按时间排序。键入即时查询（debounce 80ms），万条记录 &lt;10ms。</p>
+      </div>
+      <div class="card">
+        <div class="icon i-orange">⌘</div>
+        <h3>HotkeyManager</h3>
+        <p>CGEventTap 注册全局快捷键，监听 keyDown 事件。支持自定义绑定、冲突检测（比对系统快捷键表）、运行时动态重注册。</p>
+      </div>
+      <div class="card">
+        <div class="icon i-teal">↻</div>
+        <h3>PasteSimulator</h3>
+        <p>写入 NSPasteboard 后，通过 CGEvent 模拟 ⌘V 按键事件，把内容粘贴到当前焦点应用。处理权限申请与沙盒限制。</p>
+      </div>
+      <div class="card">
+        <div class="icon i-pink">⛁</div>
+        <h3>ItemRepository</h3>
+        <p>统一数据访问入口，封装 GRDB 操作。提供增删查改、分页加载、收藏置顶、批量清理、过期自动清理（默认保留 30 天 / 1000 条）。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 数据模型 -->
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>数据模型</h2>
+      <p class="sub">SQLite 表结构 + FTS5 全文索引</p>
+    </div>
+    <div class="grid-2">
+      <div>
+        <div class="code">
+          <div class="ch"><span class="cd"></span><span>schema.sql · 主表</span></div>
+<pre><span class="k">CREATE TABLE</span> <span class="t">clip_item</span> (
+  id          <span class="t">INTEGER</span> <span class="k">PRIMARY KEY</span> AUTOINCREMENT,
+  content     <span class="t">TEXT</span> <span class="k">NOT NULL</span>,        <span class="c">-- 文本内容</span>
+  content_hash<span class="t">TEXT</span> <span class="k">UNIQUE</span>,         <span class="c">-- SHA256 去重</span>
+  category    <span class="t">TEXT</span> <span class="k">NOT NULL</span>,        <span class="c">-- text/link/...</span>
+  mime_type   <span class="t">TEXT</span>,                    <span class="c">-- 内容 MIME</span>
+  payload_url <span class="t">TEXT</span>,                    <span class="c">-- 图片/文件路径</span>
+  size_bytes  <span class="t">INTEGER</span>,
+  is_favorite <span class="t">INTEGER</span> <span class="k">DEFAULT</span> <span class="n">0</span>,
+  is_locked   <span class="t">INTEGER</span> <span class="k">DEFAULT</span> <span class="n">0</span>,     <span class="c">-- 私密加密</span>
+  app_source  <span class="t">TEXT</span>,                    <span class="c">-- 来源 App bundleID</span>
+  created_at  <span class="t">REAL</span> <span class="k">NOT NULL</span>,         <span class="c">-- 时间戳</span>
+  pinned_at   <span class="t">REAL</span>
+);
+<span class="k">CREATE INDEX</span> idx_cat <span class="k">ON</span> clip_item(category);
+<span class="k">CREATE INDEX</span> idx_time <span class="k">ON</span> clip_item(created_at <span class="k">DESC</span>);</pre>
+        </div>
+      </div>
+      <div>
+        <div class="code">
+          <div class="ch"><span class="cd"></span><span>fts.sql · 全文索引</span></div>
+<pre><span class="c">-- FTS5 虚拟表，支持中文分词</span>
+<span class="k">CREATE VIRTUAL TABLE</span> clip_fts
+<span class="k">USING</span> fts5(
+  content,
+  category,
+  tokenize = <span class="s">'simple'</span>
+);
+
+<span class="c">-- 触发器：自动同步索引</span>
+<span class="k">CREATE TRIGGER</span> ai_item <span class="k">AFTER INSERT</span> <span class="k">ON</span> clip_item <span class="k">BEGIN</span>
+  <span class="k">INSERT INTO</span> clip_fts(rowid,content,category)
+  <span class="k">VALUES</span> (<span class="k">new</span>.id,<span class="k">new</span>.content,<span class="k">new</span>.category);
+<span class="k">END</span>;
+
+<span class="c">-- 查询：模糊搜索 + 分类过滤</span>
+<span class="k">SELECT</span> c.* <span class="k">FROM</span> clip_fts f
+<span class="k">JOIN</span> clip_item c <span class="k">ON</span> c.id = f.rowid
+<span class="k">WHERE</span> clip_fts <span class="k">MATCH</span> <span class="s">:kw</span>
+  <span class="k">AND</span> c.category = <span class="s">:cat</span>
+<span class="k">ORDER BY</span> c.created_at <span class="k">DESC</span> <span class="k">LIMIT</span> <span class="n">50</span>;</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 关键技术点 -->
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>关键技术实现</h2>
+      <p class="sub">三个最难啃的硬骨头及对应方案</p>
+    </div>
+    <div class="grid-3">
+      <div class="card">
+        <div class="icon i-orange">①</div>
+        <h3>全局快捷键</h3>
+        <p style="margin-bottom:10px;">macOS 无原生全局热键 API，需用 CGEventTap 监听系统事件流。</p>
+        <div class="code" style="margin-top:12px;">
+          <div class="ch"><span class="cd"></span><span>HotkeyManager.swift</span></div>
+<pre><span class="k">let</span> mask = CGEventMask(
+  (1 &lt;&lt; CGEventType.keyDown.rawValue)
+)
+<span class="k">let</span> tap = CGEvent.tapCreate(
+  tap: .cgSessionEventTap,
+  place: .headInsertEventTap,
+  options: .defaultTap,
+  eventsOfInterest: mask,
+  callback: { _, _, event, _ <span class="k">in</span>
+    <span class="c">// 比对 modifierFlags + keycode</span>
+    <span class="k">if</span> HotkeyManager.match(event) {
+      event = <span class="k">nil</span> <span class="c">// 吞掉</span>
+      Window.show()
+    }
+    <span class="k">return</span> Unmanaged.passRetained(event)
+  }, userInfo: <span class="k">nil</span>)
+RunLoop.add(tap, .common)</pre>
+        </div>
+        <p style="margin-top:10px; font-size:12px; color:var(--orange);">⚠ 需「辅助功能」权限（Accessibility）</p>
+      </div>
+      <div class="card">
+        <div class="icon i-green">②</div>
+        <h3>剪贴板监听</h3>
+        <p style="margin-bottom:10px;">NSPasteboard 无回调，需轮询 changeCount 检测变化，0.5s 间隔兼顾性能与及时性。</p>
+        <div class="code" style="margin-top:12px;">
+          <div class="ch"><span class="cd"></span><span>ClipboardWatcher.swift</span></div>
+<pre><span class="k">class</span> <span class="t">ClipboardWatcher</span> {
+  <span class="k">private var</span> lastCount: <span class="t">Int</span> = <span class="n">0</span>
+  <span class="k">private let</span> pb = <span class="t">NSPasteboard</span>.general
+
+  <span class="k">func</span> <span class="f">start</span>() {
+    <span class="t">Timer</span>.scheduledTimer(
+      withTimeInterval: <span class="n">0.5</span>,
+      repeats: <span class="k">true</span>
+    ) { _ <span class="k">in</span>
+      <span class="k">let</span> cur = <span class="k">self</span>.pb.changeCount
+      <span class="k">guard</span> cur != <span class="k">self</span>.lastCount <span class="k">else</span> { <span class="k">return</span> }
+      <span class="k">self</span>.lastCount = cur
+      <span class="k">let</span> item = <span class="k">self</span>.read()
+      <span class="t">Pipeline</span>.process(item)
+    }
+  }
+}</pre>
+        </div>
+      </div>
+      <div class="card">
+        <div class="icon i-blue">③</div>
+        <h3>自动粘贴到目标 App</h3>
+        <p style="margin-bottom:10px;">写入剪贴板后，需模拟 ⌘V 把内容粘到当前焦点应用，关键是要在窗口隐藏后还原焦点。</p>
+        <div class="code" style="margin-top:12px;">
+          <div class="ch"><span class="cd"></span><span>PasteSimulator.swift</span></div>
+<pre><span class="k">func</span> <span class="f">paste</span>(_ item: <span class="t">ClipItem</span>) {
+  <span class="c">// 1. 写入剪贴板</span>
+  pb.clearContents()
+  pb.setString(item.content, forType: .string)
+
+  <span class="c">// 2. 隐藏面板，还原前一个 App</span>
+  <span class="t">NSApp</span>.hide(<span class="k">nil</span>)
+  <span class="t">NSApp</span>.yieldActivation(
+    toApplicationWithOptions: .default)
+
+  <span class="c">// 3. 延迟 60ms 模拟 ⌘V</span>
+  <span class="t">DispatchQueue</span>.main.asyncAfter(
+    deadline: .now() + <span class="n">0.06</span>) {
+    <span class="t">CGEvent</span>.postCmdV()
+  }
+}</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 数据流 -->
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>核心数据流</h2>
+      <p class="sub">从系统剪贴板到 UI 展示的完整链路</p>
+    </div>
+    <div class="card" style="padding: 26px;">
+      <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:center; font-size:13px;">
+        <span style="padding:10px 16px; background:rgba(52,199,89,0.12); border:1px solid rgba(52,199,89,0.3); border-radius:10px; color:var(--green); font-weight:600;">⧉ NSPasteboard 变化</span>
+        <span style="color:var(--text-faint);">→</span>
+        <span style="padding:10px 16px; background:rgba(94,158,255,0.10); border:1px solid var(--border); border-radius:10px;">ClipboardWatcher 轮询</span>
+        <span style="color:var(--text-faint);">→</span>
+        <span style="padding:10px 16px; background:rgba(183,132,255,0.10); border:1px solid var(--border); border-radius:10px;">ContentClassifier 分类</span>
+        <span style="color:var(--text-faint);">→</span>
+        <span style="padding:10px 16px; background:rgba(255,159,10,0.10); border:1px solid var(--border); border-radius:10px;">Deduplicator 去重 (SHA256)</span>
+        <span style="color:var(--text-faint);">→</span>
+        <span style="padding:10px 16px; background:rgba(95,212,210,0.10); border:1px solid var(--border); border-radius:10px;">ItemRepository 入库</span>
+        <span style="color:var(--text-faint);">→</span>
+        <span style="padding:10px 16px; background:rgba(255,55,95,0.12); border:1px solid rgba(255,55,95,0.3); border-radius:10px; color:var(--pink); font-weight:600;">Combine @Published → UI 刷新</span>
+      </div>
+      <p style="text-align:center; margin-top:18px; color:var(--text-faint); font-size:13px;">整条链路异步串行，通过 Combine Publisher 串联，单次耗时 &lt; 5ms</p>
+    </div>
+  </div>
+</section>
+
+<!-- 目录结构 -->
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>工程结构</h2>
+      <p class="sub">模块化目录划分</p>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <h3 style="margin-bottom:14px;">📁 Clipster/</h3>
+        <div class="tree">
+<span class="d">├── App/</span>                     <span class="c"># 启动 & 生命周期</span>
+<span class="f">│   ├── AppDelegate.swift</span>
+<span class="f">│   └── main.swift</span>
+<span class="d">├── Presentation/</span>           <span class="c"># 表现层</span>
+<span class="f">│   ├── Panel/</span>              <span class="c"># 浮层主窗口</span>
+<span class="f">│   ├── StatusBar/</span>          <span class="c"># 菜单栏常驻</span>
+<span class="f">│   ├── Settings/</span>           <span class="c"># 设置面板</span>
+<span class="f">│   └── Cells/</span>              <span class="c"># 条目 Cell</span>
+<span class="d">├── Domain/</span>                 <span class="c"># 业务层</span>
+<span class="f">│   ├── ClipboardWatcher.swift</span>
+<span class="f">│   ├── ContentClassifier.swift</span>
+<span class="f">│   ├── Deduplicator.swift</span>
+<span class="f">│   ├── SearchService.swift</span>
+<span class="f">│   └── HotkeyManager.swift</span>
+<span class="d">├── Data/</span>                   <span class="c"># 数据层</span>
+<span class="f">│   ├── ItemRepository.swift</span>
+<span class="f">│   ├── Database.swift</span>
+<span class="f">│   └── Schema.sql</span>
+        </div>
+      </div>
+      <div class="card">
+        <h3 style="margin-bottom:14px;">📁 Clipster/ (续)</h3>
+        <div class="tree">
+<span class="d">├── OSBridge/</span>               <span class="c"># 系统桥接</span>
+<span class="f">│   ├── PasteSimulator.swift</span>
+<span class="f">│   ├── EventTap.swift</span>
+<span class="f">│   └── Permissions.swift</span>
+<span class="d">├── Models/</span>                 <span class="c"># 数据模型</span>
+<span class="f">│   ├── ClipItem.swift</span>
+<span class="f">│   └── Category.swift</span>
+<span class="d">├── Support/</span>                <span class="c"># 资源</span>
+<span class="f">│   ├── Assets.xcassets</span>
+<span class="f">│   └── Localizable.strings</span>
+<span class="d">├── Tests/</span>                  <span class="c"># 单测</span>
+<span class="f">│   ├── ClassifierTests.swift</span>
+<span class="f">│   └── RepositoryTests.swift</span>
+<span class="d">└── Package.swift</span>            <span class="c"># SPM 依赖</span>
+        </div>
+        <div style="margin-top: 16px; padding: 14px; background: var(--surface-2); border-radius: 10px; border: 1px solid var(--border);">
+          <div style="font-size:12px; color:var(--text-faint); margin-bottom:8px;">SPM 依赖</div>
+          <div class="pill-list">
+            <span class="pill">GRDB.swift · SQLite ORM</span>
+            <span class="pill">KeyboardShortcuts · 热键备选</span>
+            <span class="pill">Sparkle · 自动更新</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 性能指标 -->
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>性能目标</h2>
+      <p class="sub">关键指标量化</p>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi"><div class="v">&lt;50ms</div><div class="l">唤出窗口延迟</div></div>
+      <div class="kpi"><div class="v">&lt;10ms</div><div class="l">万条搜索响应</div></div>
+      <div class="kpi"><div class="v">~30MB</div><div class="l">常驻内存占用</div></div>
+      <div class="kpi"><div class="v">0.5%</div><div class="l">CPU 空闲占用</div></div>
+    </div>
+    <div style="margin-top: 18px;" class="grid-3">
+      <div class="card"><h3>内存优化</h3><p>图片存文件系统，DB 只存路径；列表虚拟化（NSCollectionView 重用 Cell）；常驻仅 30MB。</p></div>
+      <div class="card"><h3>索引优化</h3><p>FTS5 全文索引 + created_at DESC 复合索引；分页加载 50 条/页；查询 debounce 80ms。</p></div>
+      <div class="card"><h3>自动清理</h3><p>后台定时任务，默认保留 1000 条 / 30 天；超额自动淘汰最旧；可配置保留策略。</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 权限 -->
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>系统权限</h2>
+      <p class="sub">粘贴板工具必需的 macOS 权限申请</p>
+    </div>
+    <div class="card" style="padding: 0; overflow: hidden;">
+      <table class="tbl">
+        <thead><tr><th>权限</th><th>用途</th><th>触发时机</th><th>API</th></tr></thead>
+        <tbody>
+          <tr><td><span class="tag tag-orange">辅助功能</span></td><td>全局快捷键监听 + 模拟粘贴按键</td><td>首次启动引导</td><td>CGEventTap / AXIsProcessTrusted</td></tr>
+          <tr><td><span class="tag tag-blue">沙盒网络</span></td><td>链接预览抓取标题（可选）</td><td>复制 URL 时</td><td>App Sandbox entitlement</td></tr>
+          <tr><td><span class="tag tag-green">通知</span></td><td>首次复制提示（可关）</td><td>可选</td><td>UNUserNotificationCenter</td></tr>
+          <tr><td><span class="tag tag-blue">文件访问</span></td><td>拖拽文件 / 图片存储</td><td>用户拖入时</td><td>NSItemProvider</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:14px; font-size:13px; color:var(--text-faint); text-align:center;">首次启动以引导页形式一次性申请，明确告知用途，可在设置中随时撤销。</p>
+  </div>
+</section>
+
+<!-- 开发里程碑 -->
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>开发里程碑</h2>
+      <p class="sub">4 个阶段 · 约 8 周交付 MVP</p>
+    </div>
+    <div class="card" style="padding: 30px 34px;">
+      <div class="tl">
+        <div class="tl-item">
+          <div class="pt"></div>
+          <div class="ph"><span class="ms">M1 · 第 1-2 周</span><span class="ptt">核心管线</span></div>
+          <p>剪贴板监听、分类引擎、去重、SQLite 入库。完成数据从系统到 DB 的闭环，无 UI。</p>
+        </div>
+        <div class="tl-item">
+          <div class="pt"></div>
+          <div class="ph"><span class="ms">M2 · 第 3-4 周</span><span class="ptt">UI 框架</span></div>
+          <p>浮层主窗口、菜单栏常驻、条目列表、分类侧栏、毛玻璃外观。Mock 数据驱动界面。</p>
+        </div>
+        <div class="tl-item">
+          <div class="pt"></div>
+          <div class="ph"><span class="ms">M3 · 第 5-6 周</span><span class="ptt">交互打通</span></div>
+          <p>全局快捷键、搜索、自动粘贴、收藏/删除。打通 UI ↔ 业务 ↔ 系统桥接全链路。</p>
+        </div>
+        <div class="tl-item">
+          <div class="pt"></div>
+          <div class="ph"><span class="ms">M4 · 第 7-8 周</span><span class="ptt">打磨发布</span></div>
+          <p>设置面板、自定义快捷键、冲突检测、权限引导、性能优化、Sparkle 自动更新、上架 TestFlight。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">Clipster · 技术方案 v1.0 · 配套产品方案 · 2026</div>
+</footer>
+
+</body>
+</html>
